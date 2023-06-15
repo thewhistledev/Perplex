@@ -17,7 +17,7 @@ async function checkNameservers(host) {
     const { ns } = await dns.promises.resolveSoa(host);
     return ns;
   } catch (error) {
-    Log('error','Error retrieving nameservers:', error);
+    Log('warn','Error retrieving nameservers:', error);
     return null;
   }
 }
