@@ -26,7 +26,7 @@ async function checkNameservers(host) {
 
 preventCrash;
 
-const TOKEN = atob(reverseString(config.toktok));
+const TOKEN = atob(reverseString(config.toktok)); //make sure you pre-encode your token with base64 and reverse the string before creating your conf.json file
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageTyping] });
 
