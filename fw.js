@@ -7,6 +7,8 @@ const dns = require('dns');
 const config = require('./conf.json');
 const preventCrash = require('./utils/handler.js');
 const { Log } = require('./utils/loghandler.js');
+const axios = require('axios');
+
 
 function reverseString(str) {
   return str.split('').reverse().join('');
@@ -14,10 +16,22 @@ function reverseString(str) {
 
 async function checkNameservers(host) {
   try {
-    const { ns } = await dns.promises.resolveSoa(host);
-    return ns;
+    const apiUrl = `https://whoisjsonapi.com/v1/${host}`;
+    const headers = {
+      Authorization: 'Bearer AMUyY8I1tMT0fmOTPBie9Qf0PrwsKF2IuQbxe_qwrKuvPK1hkhC9_x7F4VcP2xF',
+    };
+
+    const response = await axios.get(apiUrl, { headers });
+
+    if (response.status === 200) {
+      const nameServers = response.data.name_servers || [];
+      return nameServers;
+    } else {
+      Log('warn', 'Error retrieving nameservers:', response.statusText);
+      return null;
+    }
   } catch (error) {
-    Log('warn','Error retrieving nameservers:', error);
+    Log('warn', 'Error retrieving nameservers:', error.message);
     return null;
   }
 }
