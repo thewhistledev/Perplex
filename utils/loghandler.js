@@ -21,7 +21,7 @@
  * // [DEBUG]: This is a debug message
 */
 function Log(traceLevel, traceMessage){
-    console.log(`[${traceLevel.toUpperCase()}]: ${traceMessage}`);
+    console.log(`[${traceLevel}]: ${traceMessage}`);
 }
 
 module.exports = { Log };

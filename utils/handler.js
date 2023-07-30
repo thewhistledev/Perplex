@@ -6,7 +6,7 @@ const { Log } = require('./loghandler');
  */
 function preventCrash() {
     process.on('uncaughtException', (err, origin) => {
-        Log(3, `Caught exception: ${err}\n` + `Exception Type: ${origin}`, 'error');
+        Log(3, `Caught exception: ${err}\n` + `Error Info: ${err.stack}`, 'error');
       });
 
     process.on('unhandledRejection', (reason, promise) => {
