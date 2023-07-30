@@ -4,7 +4,7 @@
   "description": "A discord bot for uptime monitoring.",
   "main": "fw.js",
   "scripts": {
-    "test": "node fw.js"
+    "test": "nodemon fw.js"
   },
   "keywords": [
     "perplex"
