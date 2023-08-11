@@ -36,6 +36,7 @@ async function reverseDNS(ipAddress) {
   }
 }
 
+
 async function fetchWHOISData(host) {
   try {
     const apiUrl = `https://whoisjsonapi.com/v1/${host}`;
@@ -93,6 +94,42 @@ const commands = [
         required: true,
       },
     ],
+  },
+  {
+    name: 'ban',
+    description: 'Ban a user from the server',
+    options: [
+        {
+            name: 'user',
+            description: 'The user you want to ban',
+            type: 6,
+            required: true
+        },
+        {
+            name: 'reason',
+            description: 'The reason for the ban',
+            type: 3,
+            required: true
+        }
+    ]
+  },
+  {
+    name: 'kick',
+    description: 'Kick a user from the server',
+    options: [
+        {
+            name: 'user',
+            description: 'The user you want to kick',
+            type: 6,
+            required: true
+        },
+        {
+            name: 'reason',
+            description: 'The reason for the kick',
+            type: 3,
+            required: true
+        }
+    ]
   },
 ];
 
@@ -243,6 +280,40 @@ client.on('interactionCreate', async (interaction) => {
   if (command === 'whois') {
   // Handle the /whois command
   await whoisCommand(interaction);
+  }
+  if (commandName === 'ban') {
+    const userToBan = options.getUser('user');
+    const reason = options.getString('reason');
+    if(!interaction.member.permissions.has("ADMINISTRATOR")) return;
+    // Send embed to user
+    const embed = new EmbedBuilder()
+      .setTitle('Ban Notice')
+      .setDescription(`You have been banned from ${interaction.guild.name} for: ${reason}`)
+      .setColor('RED');
+
+    await userToBan.send({ embeds: [embed] });
+
+    // Ban the user
+    await interaction.guild.members.ban(userToBan, { reason });
+    await interaction.reply({ content: `${userToBan.tag} has been banned for: ${reason}`, ephemeral: true });
+  }
+  
+  if (commandName === 'kick') {
+    const userToKick = options.getUser('user');
+    const reason = options.getString('reason');
+    if(!interaction.member.permissions.has("ADMINISTRATOR")) return;
+    // Send embed to user
+    const embed = new EmbedBuilder()
+      .setTitle('Kick Notice')
+      .setDescription(`You have been kicked from ${interaction.guild.name} for: ${reason}`)
+      .setColor('ORANGE');
+
+    await userToKick.send({ embeds: [embed] });
+
+    // Kick the user
+    const member = interaction.guild.members.cache.get(userToKick.id);
+    await member.kick(reason);
+    await interaction.reply({ content: `${userToKick.tag} has been kicked for: ${reason}`, ephemeral: true });
   }
 });
 
