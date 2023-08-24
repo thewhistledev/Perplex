@@ -249,7 +249,7 @@ client.on('interactionCreate', async (interaction) => {
       .setAuthor({ name: "Requested by "+interaction.member.user.username, iconUrl: interaction.member.user.avatarURL()})
       .setFooter({ text: 'Created by WhistleDev'})
       .setTimestamp();
-      if ((await nameservers)) {
+      if ((await nameservers)) { // Iterates through all nameservers known to the host, doesn't currently work #Fix
         nameservers.forEach((nameserver, i) => {
           embed.addFields({name: `NS${i + 1}`, value: nameserver, inline: false});
         });
@@ -268,7 +268,7 @@ client.on('interactionCreate', async (interaction) => {
 
     // Check ICMP ping
     const pingStartTime = performance.now();
-    const pingResult = await ping.promise.probe('1.1.1.1'); // Random IP address
+    const pingResult = await ping.promise.probe('1.1.1.1'); // Checks the bot's capability to ping anything (basically checks if network is down on host machine before trying commands)
     const pingEndTime = performance.now();
     const pingTime = pingEndTime - pingStartTime;
     if(!pingResult.alive) pingTime = 9999;
@@ -284,7 +284,7 @@ client.on('interactionCreate', async (interaction) => {
   if (command === 'ban') {
     const userToBan = options.getUser('user');
     const reason = options.getString('reason');
-    if(!interaction.member.permissions.has("ADMINISTRATOR")) return;
+    if(!interaction.member.permissions.has("ADMINISTRATOR")) return; // stops weirdos that try using restricted commands without admin perms.
     // Send embed to user
     const embed = new EmbedBuilder()
       .setTitle('Ban Notice')
@@ -317,4 +317,4 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
-client.login(TOKEN);
+client.login(TOKEN); // Logs into Discord API OAuth for Bot to initialise the connection.. Without this there is no bot.
