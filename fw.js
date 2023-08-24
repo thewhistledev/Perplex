@@ -1,22 +1,22 @@
-const { Client, GatewayIntentBits, CommandInteraction, ActivityType, EmbedBuilder } = require('discord.js');
-const ping = require('ping');
-const { performance } = require('perf_hooks');
-const tcpPing = require('tcp-ping');
-const geoip = require('geoip-lite');
-const dns = require('dns');
-const config = require('./conf.json');
-const preventCrash = require('./utils/handler.js');
-const { Log } = require('./utils/loghandler.js');
-const axios = require('axios');
+const { Client, GatewayIntentBits, CommandInteraction, ActivityType, EmbedBuilder } = require('discord.js'); // DiscordJS Library
+const ping = require('ping'); // Ping Library
+const { performance } = require('perf_hooks'); //Network & Performance Lib
+const tcpPing = require('tcp-ping'); // TCP Analyser
+const geoip = require('geoip-lite'); // IP 2 Location
+const dns = require('dns'); // DNS Resolver Library
+const config = require('./conf.json'); // Configuration for Bot (Token, Name, Etc..)
+const preventCrash = require('./utils/handler.js'); // Handwritten Crash Handler
+const { Log } = require('./utils/loghandler.js'); // Prints prefixes and suffixes to outputs.
+const axios = require('axios'); //I think this is a web server framework lmao like curl.
 
 
-function reverseString(str) {
+function reverseString(str) { //reverse string, should be obvious by the name.
   return str.split('').reverse().join('');
 }
 
 
 
-async function checkNameservers(host) {
+async function checkNameservers(host) { // supposed to check nameservers of a dns host but fails cuz im ded #Fix
   try {
     const { ns } = (await dns.promises.resolveNs(host)).toString();
     return ns;
@@ -26,7 +26,7 @@ async function checkNameservers(host) {
   }
 }
 
-async function reverseDNS(ipAddress) {
+async function reverseDNS(ipAddress) { //reverses the ip into a FQDN (Fully Qualified Domain Name)
   try {
     const hostnames = await dns.promises.reverse(ipAddress);
     return hostnames.join(', ');
@@ -37,7 +37,7 @@ async function reverseDNS(ipAddress) {
 }
 
 
-async function fetchWHOISData(host) {
+async function fetchWHOISData(host) {  //Fetches whois data (supposed to but doesnt work) #Fix
   try {
     const apiUrl = `https://whoisjsonapi.com/v1/${host}`;
     const headers = {
@@ -64,9 +64,9 @@ preventCrash;
 
 const TOKEN = atob(reverseString(config.toktok)); //make sure you pre-encode your token with base64 and reverse the string before creating your conf.json file
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageTyping] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageTyping] }); //Discord Client API
 
-const commands = [
+const commands = [ // Discord Slash Commands List
   {
     name: 'check',
     description: 'Check the status of a service',
@@ -163,7 +163,7 @@ async function whoisCommand(interaction) {
   }
 }
 
-async function registerCommands() {
+async function registerCommands() { //Syncs Slash Commands with Discord API so bot doesn't shit itself
   try {
     Log('debug','Started refreshing application (/) commands.');
     await client.application.commands.set(commands);
@@ -173,7 +173,7 @@ async function registerCommands() {
   }
 }
 
-async function pingDNS(host) {
+async function pingDNS(host) { //Pings a DNS host and returns time in milliseconds (ms)
   const dnsPingStartTime = performance.now();
   try {
     await dns.promises.resolve(host);
@@ -202,7 +202,7 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
     // Defer the reply
-    await interaction.deferReply();
+    await interaction.deferReply(); // Discord bots have something like a "timer" to execute commands, this resets the timer in a sense so it can finish executing long commands.
 
     // Get country from IP address
     const ipAddress = serviceUrl.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/) ? serviceUrl : (await ping.promise.probe(serviceUrl)).numeric_host;
@@ -230,7 +230,7 @@ client.on('interactionCreate', async (interaction) => {
     const tcpPingEndTime = performance.now();
     const tcpPingTime = tcpPingEndTime - tcpPingStartTime;
     const tcpPingStatus = tcpPingResult.results[0].err ? '<:hostdown:1118660232634191872>' : '<:hostup:1118660234781659287>';
-    const nameservers = await checkNameservers(serviceUrl);
+    const nameservers = await checkNameservers(serviceUrl); // again this doesn't work #Fix
     // Create an embed with the status information
     const embed = new EmbedBuilder()
       .setColor('#0099ff')
@@ -281,7 +281,7 @@ client.on('interactionCreate', async (interaction) => {
   // Handle the /whois command
   await whoisCommand(interaction);
   }
-  if (commandName === 'ban') {
+  if (command === 'ban') {
     const userToBan = options.getUser('user');
     const reason = options.getString('reason');
     if(!interaction.member.permissions.has("ADMINISTRATOR")) return;
@@ -298,7 +298,7 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.reply({ content: `${userToBan.tag} has been banned for: ${reason}`, ephemeral: true });
   }
   
-  if (commandName === 'kick') {
+  if (command === 'kick') {
     const userToKick = options.getUser('user');
     const reason = options.getString('reason');
     if(!interaction.member.permissions.has("ADMINISTRATOR")) return;
