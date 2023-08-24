@@ -282,14 +282,14 @@ client.on('interactionCreate', async (interaction) => {
   await whoisCommand(interaction);
   }
   if (command === 'ban') {
-    const userToBan = options.getUser('user');
-    const reason = options.getString('reason');
+    const userToBan = interaction.command.options.getUser('user');
+    const reason = interaction.command.options.getString('reason');
     if(!interaction.member.permissions.has("ADMINISTRATOR")) return; // stops weirdos that try using restricted commands without admin perms.
     // Send embed to user
     const embed = new EmbedBuilder()
       .setTitle('Ban Notice')
       .setDescription(`You have been banned from ${interaction.guild.name} for: ${reason}`)
-      .setColor('RED');
+      .setColor('#FF0000');
 
     await userToBan.send({ embeds: [embed] });
 
@@ -299,22 +299,27 @@ client.on('interactionCreate', async (interaction) => {
   }
   
   if (command === 'kick') {
-    const userToKick = options.getUser('user');
-    const reason = options.getString('reason');
+    const userToKick = interaction.options.getMember("user");
+    const reason = interaction.options.getString('reason');
     if(!interaction.member.permissions.has("ADMINISTRATOR")) return;
     // Send embed to user
     const embed = new EmbedBuilder()
       .setTitle('Kick Notice')
       .setDescription(`You have been kicked from ${interaction.guild.name} for: ${reason}`)
-      .setColor('ORANGE');
+      .setColor('#FFA500');
 
     await userToKick.send({ embeds: [embed] });
 
     // Kick the user
     const member = interaction.guild.members.cache.get(userToKick.id);
     await member.kick(reason);
-    await interaction.reply({ content: `${userToKick.tag} has been kicked for: ${reason}`, ephemeral: true });
+    await interaction.reply({ content: `${userToKick} has been kicked for: ${reason}`, ephemeral: true });
   }
 });
 
 client.login(TOKEN); // Logs into Discord API OAuth for Bot to initialise the connection.. Without this there is no bot.
+
+
+//Let's test it
+
+// Seems im dumb lets test that instead
