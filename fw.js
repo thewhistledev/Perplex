@@ -282,9 +282,10 @@ client.on('interactionCreate', async (interaction) => {
   await whoisCommand(interaction);
   }
   if (command === 'ban') {
-    const userToBan = interaction.command.options.getUser('user');
-    const reason = interaction.command.options.getString('reason');
+    const userToBan = interaction.options.getMember('user');
+    const reason = interaction.options.getString('reason');
     if(!interaction.member.permissions.has("ADMINISTRATOR")) return; // stops weirdos that try using restricted commands without admin perms.
+    if(!interaction.guild.members.me.permissions.has("BAN_MEMBERS")) return;
     // Send embed to user
     const embed = new EmbedBuilder()
       .setTitle('Ban Notice')
@@ -295,13 +296,15 @@ client.on('interactionCreate', async (interaction) => {
 
     // Ban the user
     await interaction.guild.members.ban(userToBan, { reason });
-    await interaction.reply({ content: `${userToBan.tag} has been banned for: ${reason}`, ephemeral: true });
+    await interaction.reply({ content: `${userToBan} has been banned for: ${reason}`, ephemeral: true });
+    console.log('%s has been banned from %s\nReason: %s', userToBan.displayName, interaction.guild.name, reason);
   }
   
   if (command === 'kick') {
     const userToKick = interaction.options.getMember("user");
     const reason = interaction.options.getString('reason');
     if(!interaction.member.permissions.has("ADMINISTRATOR")) return;
+    if(!interaction.guild.members.me.permissions.has("KICK_MEMBERS")) return;
     // Send embed to user
     const embed = new EmbedBuilder()
       .setTitle('Kick Notice')
@@ -314,6 +317,7 @@ client.on('interactionCreate', async (interaction) => {
     const member = interaction.guild.members.cache.get(userToKick.id);
     await member.kick(reason);
     await interaction.reply({ content: `${userToKick} has been kicked for: ${reason}`, ephemeral: true });
+    console.log('%s has been kicked from %s\nReason: %s', userToKick.displayName, interaction.guild.name, reason);
   }
 });
 
