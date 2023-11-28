@@ -37,26 +37,32 @@ async function reverseDNS(ipAddress) { //reverses the ip into a FQDN (Fully Qual
 }
 
 
-async function fetchWHOISData(host) {  //Fetches whois data (supposed to but doesnt work) #Fix
+async function fetchWHOISData(domain) {
   try {
-    const apiUrl = `https://whoisjsonapi.com/v1/${host}`;
-    const headers = {
-      "Authorization": 'Bearer AMUyY8I1tMT0fmOTPBie9Qf0PrwsKF2IuQbxe_qwrKuvPK1hkhC9_x7F4VcP2xF',
-      "Content-type": "application/json",
+    const options = {
+      method: 'GET',
+      url: `https://whoisjson.com/api/v1/whois?domain=${domain}&format=json`,
+      headers: {
+        'Authorization': `Token=${config.whoisapikey}` // Replace with your actual API token
+      }
     };
 
-    const response = await axios.get(apiUrl, { headers });
-
-    if (response.status === 200) {
-      return response.data;
-    } else {
-      throw new Error('Failed to fetch WHOIS data\nStatus Recieved: '+response.status);
+    const response = await axios.request(options);
+    if (typeof response.data === 'string') {
+      return JSON.parse(response.data); // Parse string to JSON
     }
+    return response.data; // Directly return the object if already in JSON format
   } catch (error) {
-    throw error + "\nStatus Recieved: " + response.status;
+    console.error('Error fetching WHOIS data:', error);
+    return null;
   }
 }
 
+
+
+function isNullOrUndefined(obj) {
+  return obj === null || obj === undefined;
+}
 
 
 
@@ -88,7 +94,7 @@ const commands = [ // Discord Slash Commands List
     description: 'Get WHOIS information for a domain',
     options: [
       {
-        name: 'host',
+        name: 'domain',
         description: 'Domain to check',
         type: 3, // 3 = String
         required: true,
@@ -134,34 +140,34 @@ const commands = [ // Discord Slash Commands List
 ];
 
 async function whoisCommand(interaction) {
-  const domain = interaction.options.getString('host');
+  const domain = interaction.options.getString('domain');
+  const whoisData = await fetchWHOISData(domain);
 
-  try {
-    // Fetch WHOIS data
-    const whoisData = await fetchWHOISData(domain);
-
-    // Create an embed with the WHOIS information
-    const embed = new EmbedBuilder()
-      .setColor('#0099ff')
-      .setTitle(`WHOIS Information for ${whoisData.domain.domain}`)
-      .addField('Registrar', whoisData.registrar.name)
-      .addField('Created Date', new Date(whoisData.domain.created_date).toUTCString())
-      .addField('Updated Date', new Date(whoisData.domain.updated_date).toUTCString())
-      .addField('Expiration Date', new Date(whoisData.domain.expiration_date).toUTCString())
-      .addField('Status', whoisData.domain.status.join(', '))
-      .addField('Name Servers', whoisData.domain.name_servers.join(', '))
-      .addField('Registrant', `${whoisData.registrant.name} (${whoisData.registrant.organization})`)
-      .addField('Administrative Contact', `${whoisData.administrative.name} (${whoisData.administrative.organization})`)
-      .addField('Technical Contact', `${whoisData.technical.name} (${whoisData.technical.organization})`)
-      .setTimestamp();
-
-    // Send the embed as the reply
-    await interaction.reply({ embeds: [embed] });
-  } catch (error) {
-    Log('warn', 'Error fetching WHOIS data:', error.message);
-    await interaction.reply('Error fetching WHOIS data for the domain.');
+  if (!whoisData) {
+    return interaction.reply({ content: 'Failed to fetch WHOIS data for the domain.', ephemeral: true });
   }
+
+  const embed = new EmbedBuilder()
+    .setColor('#0099ff')
+    .setTitle(`WHOIS Information for ${domain}`)
+    .addFields(
+      { name: 'Domain Name', value: isNullOrUndefined(whoisData.name) ? "N/A" :  whoisData.name, inline: true },
+      { name: 'Registrar', value: isNullOrUndefined(whoisData.registrar.name) ? "N/A" :  whoisData.registrar.name, inline: false },
+      { name: 'Registrar Url', value: isNullOrUndefined(whoisData.registrar.url) ? "N/A" :  whoisData.registrar.url, inline: true },
+      { name: 'Creation Date', value: isNullOrUndefined(whoisData.created) ? "N/A" :  whoisData.created, inline: true },
+      { name: 'Expiration Date', value: isNullOrUndefined(whoisData.expires) ? "N/A" :  whoisData.expires, inline: true },
+      { name: 'Last Updated', value: isNullOrUndefined(whoisData.changed) ? "N/A" :  whoisData.changed, inline: true },
+      { name: 'Status', value: isNullOrUndefined(whoisData.status) ? "N/A" :  `${whoisData.status}`.replace(",", "\n").replace(/,/g, "\n"), inline: false },
+      { name: 'Name Servers', value: isNullOrUndefined(whoisData.nameserver) ? "N/A" : `${whoisData.nameserver}`.replace(/,/g, "\n"), inline: false },
+      { name: 'IP Address', value: isNullOrUndefined(whoisData.ips) ? "N/A" : whoisData.ips, inline: true },
+      // Additional fields can be added as needed
+    )
+    .setTimestamp();
+
+  await interaction.reply({ embeds: [embed] });
 }
+
+
 
 async function registerCommands() { //Syncs Slash Commands with Discord API so bot doesn't shit itself
   try {
